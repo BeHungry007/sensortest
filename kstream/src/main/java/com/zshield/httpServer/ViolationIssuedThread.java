@@ -16,6 +16,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.ws.rs.core.Response;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
@@ -47,8 +48,48 @@ public class ViolationIssuedThread {
             service = Executors.newScheduledThreadPool(2);
             //全量拉取Violation
             violationIssuedThread.initViolationData();
-            //violationIssuedThread.initViolationData();
+
+            Thread IssuedThread = ThreadUtil.nonDaemon(threadName + " - IssuedThrea", new Runnable() {
+                @Override
+                public void run() {
+                    logger.info("{} - IssuedThread start", threadName);
+                    violationIssuedThread.IssuedViolation();
+                }
+            })
         }
+    }
+
+    private void IssuedViolation() {
+        Set<String> keys = prepareProcessedViolations.keySet();
+        for (String key : keys) {
+            Violation violation = prepareProcessedViolations.get(key);
+            try {
+                violationCommon.detectionDependence(prepareProcessedViolations.get(key));
+            } catch (Throwable throwable) {
+                logger.error("[InitViolationData Dependence error: /violation post ruleid:{}, dependence registered request error]", violation.getRule_id(), throwable);
+                continue;
+            }
+            violation = isPrepareIssued(prepareProcessedViolations.get(key));
+
+        }
+    }
+
+    private Violation isPrepareIssued(Violation violation) {
+        boolean prepareSign = true;
+        Set<Integer> sensor_groupids = violation.getSensor_groupids();
+        for (Integer sensorGroupid : sensor_groupids) {
+            if (!violationCommon.isRegisteredSensorGroupId(sensorGroupid)) {
+                prepareSign = false;
+                break;
+            }
+        }
+        Integer programGroup = ((Violation.Conversion) violation.getRule()).getProgramGroup();
+        if (programGroup != null) {
+            if (!violationCommon.isRegisteredProgramGroupId(programGroup)) {
+                prepareSign = false;
+            }
+        }
+
     }
 
     /**

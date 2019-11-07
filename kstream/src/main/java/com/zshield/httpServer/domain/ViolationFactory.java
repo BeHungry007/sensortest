@@ -69,4 +69,9 @@ public class ViolationFactory {
         }
         return null;
     }
+
+    public static Violation parsingData(String data) {
+        JsonObject jsonObject = jsonParser.parse(data).getAsJsonObject();
+        return parsingData(jsonObject);
+    }
 }

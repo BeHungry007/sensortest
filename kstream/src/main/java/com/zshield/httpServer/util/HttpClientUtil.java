@@ -6,10 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.ws.rs.ProcessingException;
-import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
-import javax.ws.rs.client.Invocation;
-import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.client.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.net.ConnectException;
@@ -28,6 +25,25 @@ public class HttpClientUtil {
         client.property(ClientProperties.CONNECT_TIMEOUT, ViolationServerConfig.HTTPCLIENT_CONNECT_TIMEOUT);
         //读取内容超时时间
         client.property(ClientProperties.READ_TIMEOUT, ViolationServerConfig.HTTPCLIENT_READ_TIMEOUT);
+    }
+
+    public Response post(String uri, String json) throws Throwable {
+        String url = ADDRESS + uri;
+        WebTarget target = client.target(url);
+        Invocation.Builder builder = target.request(MediaType.APPLICATION_JSON);
+        Response post;
+        try {
+            post = builder.post(Entity.entity(json, MediaType.APPLICATION_JSON));
+        } catch (Exception e) {
+            Throwable cause = e.getCause();
+            if (cause instanceof ConnectException) {
+                logger.error("[Connect exception to the background] {} {} method:post", url, json, cause);
+            } else if(cause instanceof SocketTimeoutException) {
+                logger.error("[SocketTimeout exception to the background] {} {} method:post", url, json, cause);
+            }
+            throw e.getCause();
+        }
+        return post;
     }
 
     public static class SingletonPatternHolder {

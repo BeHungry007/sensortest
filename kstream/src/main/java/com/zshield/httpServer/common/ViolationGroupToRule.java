@@ -42,4 +42,11 @@ public class ViolationGroupToRule {
         return SingtonPatternHolder.violationGroupToRule;
     }
 
+    public boolean isRegisteredSensorGroupId(Integer sensorGroupId) {
+        return sensorGroupIds.containsKey(sensorGroupId);
+    }
+
+    public  boolean isRegisteredProgramGroupId(Integer programGroupId) {
+        return programGroupIds.containsKey(programGroupId);
+    }
 }

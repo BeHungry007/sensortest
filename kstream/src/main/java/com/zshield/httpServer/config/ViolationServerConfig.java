@@ -1,9 +1,13 @@
 package com.zshield.httpServer.config;
 
+import com.google.gson.JsonObject;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.security.spec.PSSParameterSpec;
+import java.util.Set;
+
 
 public class ViolationServerConfig {
 
@@ -11,13 +15,26 @@ public class ViolationServerConfig {
 
     //kstream server 接口信息
     public static final String KSTREAM_SERVER_ADDRESS = System.getenv("CURRENT_IP") == null ? "http://0.0.0.0:6211" : "http://" + System.getenv("CURRENT_IP") + ":6211";
+    private static final String KSTREAM_PUSHCHANGE_SENSORID = "/group/sensorids";
 
     //后台接口信息
     public static final String BACKSTAGE_SERVER_ADDRESS = System.getenv("MASTER_IP") == null ? "http://0.0.0.0:12000" : "http://" + System.getenv("MASTER_IP") + ":12000";
     public static final String BACKSTAGE_ALL_VIOLATION = "/febg/v1/violation/kstream_rule";
+    public static final String BACKSTAGE_REGISTERED_SENSORID = "/febg/v1/register_listener/sensor_group";
 
     //http客户端 TIMEOUT设置
     public static final int HTTPCLIENT_CONNECT_TIMEOUT = 3000;
     public static final int HTTPCLIENT_READ_TIMEOUT = 3000;
+    public static final String SERVICE_NAME = System.getenv("CURRENT_IP") == null ? "kstream_server" : "kstream_server" + System.getenv("CURRENT_IP");
 
+
+    public static String registeredSensorGroupIdsJson(Set<Integer> sensorGroupids) {
+        String sgIds = StringUtils.join(sensorGroupids, ",");
+        JsonObject jsonObject = new JsonObject();
+        jsonObject.addProperty("service_name", SERVICE_NAME);
+        jsonObject.addProperty("sensor_group_ids", sgIds);
+        jsonObject.addProperty("url", KSTREAM_SERVER_ADDRESS + KSTREAM_PUSHCHANGE_SENSORID);
+        jsonObject.addProperty("method", "post");
+        return jsonObject.toString();
+    }
 }
